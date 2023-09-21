@@ -45,26 +45,24 @@ const { v4: uuidv4 } = require('uuid');
 
 const generateUniqueNoteId = () => {
   const uuid = uuidv4();
-  const truncatedUuid = uuid.split('-')[0]; // This will give you the first part of the UUID, e.g., '9b1deb4d'
+  const truncatedUuid = uuid.split('-')[0];
   return `note_${truncatedUuid}`;
 };
 
 const createNote = async (req, res) => {
-  let { applicantId, content } = req.body; // Assuming these come from the request body
-
-  // For testing, you can set them manually, but you should remove this for production
-  applicantId = applicantId || "appl_832hly632";
+  let { applicantId } = req.params;
+  let { content } = req.body;
+  applicantId = applicantId;
   const noteId = generateUniqueNoteId()
-  content = content || "This is a test note.";
-
+  content = content || "no content";
   try {
-    const newNote = new Note({  // Assuming Note is a Mongoose model
+    const newNote = new Note({
       applicantId,
       noteId,
       content
     });
     await newNote.save();
-    res.status(201).json(newNote); // Send the newly created note back
+    res.status(201).json(newNote);
   } catch (error) {
     console.error(`Error creating note`, error);
     res.status(500).json({ error: error.toString() });
@@ -76,7 +74,7 @@ const editNote = async (req, res) => {
   const  content = req.body.content;
 
   try {
-    const result = await Note.updateOne({ noteId: noteId }, { $set: { content: content } }); // use $set to update the field
+    const result = await Note.updateOne({ noteId: noteId }, { $set: { content: content } });
 
     // Check if the note was found
     if (result.matchedCount === 0) {
@@ -127,7 +125,7 @@ router.get('/skills/:applicantId', authenticate, (req, res) => handleEndpointGet
 
 router.get('/notes', authenticate, (req, res) => handleEndpointGetRequest(req, res, Note, 'notes'));
 router.get('/notes/:applicantId', authenticate, (req, res) => handleEndpointGetRequest(req, res, Note, 'notes'));
-router.post('/notes', authenticate, createNote);
+router.post('/notes/:applicantId', authenticate, createNote);
 router.put('/notes/:noteId', authenticate, editNote);
 router.delete('/notes/:noteId', authenticate, deleteNote)
 
